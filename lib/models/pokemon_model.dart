@@ -245,6 +245,9 @@ class Pokemon {
     return {
       'id': id,
       'name': name,
+      'height': height,
+      'weight': weight,
+      'base_experience': baseExp,
       'imageUrl': imageUrl,
       'types': types.map((type) => type.toJson()).toList(),
       'stats': stats.toJson(),
