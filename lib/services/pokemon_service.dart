@@ -83,7 +83,7 @@ class PokemonService {
     _loadCacheFromFile();
   }
 
-  Future<List<Pokemon>> fetchPokemons({int limit = 151, int offset = 0}) async {
+  Future<List<Pokemon>> fetchPokemons({int limit = 100000, int offset = 0}) async {
     final String cacheKey = 'pokemon_list_${limit}_${offset}';
 
     // Vérifier si les données sont en cache et valides

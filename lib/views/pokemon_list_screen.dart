@@ -22,6 +22,36 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
         Provider.of<PokemonViewModel>(context, listen: false).fetchPokemons());
   }
 
+  void _showSortOptions(PokemonViewModel viewModel) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return SafeArea(
+          child: Wrap(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.tag),
+                title: Text('Sort by ID ${viewModel.currentSortOption == SortOption.id ? (viewModel.sortAscending ? "↑" : "↓") : ""}'),
+                onTap: () {
+                  viewModel.toggleSortOption(SortOption.id);
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.sort_by_alpha),
+                title: Text('Sort by Name ${viewModel.currentSortOption == SortOption.name ? (viewModel.sortAscending ? "↑" : "↓") : ""}'),
+                onTap: () {
+                  viewModel.toggleSortOption(SortOption.name);
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -70,14 +100,15 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
           );
         },
       ),
-      // floatingActionButton: FloatingActionButton(
-      //   backgroundColor: const Color(0xFF00ACC1),
-      //   foregroundColor: Colors.white,
-      //   onPressed: () {
-      //     // Ajouter une fonctionnalité de tri ici
-      //   },
-      //   child: const Icon(Icons.swap_vert),
-      // ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: const Color(0xFF00ACC1),
+        foregroundColor: Colors.white,
+        onPressed: () {
+          final viewModel = Provider.of<PokemonViewModel>(context, listen: false);
+          _showSortOptions(viewModel);
+        },
+        child: const Icon(Icons.swap_vert),
+      ),
     );
   }
 }
