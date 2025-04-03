@@ -24,13 +24,12 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
     _pokemonFuture = _pokemonService.fetchPokemonDetails(widget.pokemonId);
   }
 
-  // Récupère la couleur de fond basée sur le type du Pokémon
+  // get bg color based on pokemon types
   Color getBackgroundColor(List<PokemonType> types) {
     if (types.isEmpty) return Colors.grey.shade200;
-    return types[0].pastelColor; // Utilise la couleur du type principal
+    return types[0].pastelColor;
   }
 
-  // Jouer le cri du Pokémon
   Future<void> playPokemonCry(Pokemon pokemon) async {
     final url = "https://play.pokemonshowdown.com/audio/cries/${pokemon.name.replaceAll("-", "").toLowerCase()}.mp3";
     try {
@@ -50,7 +49,6 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
         final isLoading = snapshot.connectionState == ConnectionState.waiting;
         final hasError = snapshot.hasError;
 
-        // Détermine la couleur de l'appBar et du fond
         Color appBarColor = Colors.red;
         Color backgroundColor = Colors.grey.shade100;
 
@@ -100,7 +98,7 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
       child: SingleChildScrollView(
         child: Column(
           children: [
-            // Section supérieure avec image et types
+            // Header with types and img
             Container(
               padding: EdgeInsets.symmetric(vertical: 20.0),
               width: double.infinity,
@@ -153,7 +151,7 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
               ),
             ),
 
-            // Informations de base (hauteur, poids, expérience)
+            // pokemon base info
             Padding(
               padding: EdgeInsets.all(20.0),
               child: Row(
@@ -166,7 +164,7 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
               ),
             ),
 
-            // Statistiques du Pokémon
+            // Pokemon stats
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.0),
               child: Column(
@@ -192,7 +190,7 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
               ),
             ),
 
-            // Bouton pour jouer le cri
+            // Play cry button
             Padding(
               padding: EdgeInsets.symmetric(vertical: 30.0),
               child: ElevatedButton.icon(

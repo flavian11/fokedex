@@ -240,7 +240,6 @@ class Pokemon {
     );
   }
 
-  // Méthode toJson pour la sérialisation
   Map<String, dynamic> toJson() {
     return {
       'id': id,

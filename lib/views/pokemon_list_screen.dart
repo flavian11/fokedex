@@ -14,12 +14,21 @@ class PokemonListScreen extends StatefulWidget {
 }
 
 class _PokemonListScreenState extends State<PokemonListScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  bool _showSearchBar = false;
+
   @override
   void initState() {
     super.initState();
-    // Charger les Pokémon au démarrage
+    // load pokemon on start
     Future.microtask(() =>
         Provider.of<PokemonViewModel>(context, listen: false).fetchPokemons());
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   void _showSortOptions(PokemonViewModel viewModel) {
@@ -31,7 +40,7 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
             children: [
               ListTile(
                 leading: const Icon(Icons.tag),
-                title: Text('Sort by ID ${viewModel.currentSortOption == SortOption.id ? (viewModel.sortAscending ? "↑" : "↓") : ""}'),
+                title: Text('Trier par ID ${viewModel.currentSortOption == SortOption.id ? (viewModel.sortAscending ? "↑" : "↓") : ""}'),
                 onTap: () {
                   viewModel.toggleSortOption(SortOption.id);
                   Navigator.pop(context);
@@ -39,7 +48,7 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
               ),
               ListTile(
                 leading: const Icon(Icons.sort_by_alpha),
-                title: Text('Sort by Name ${viewModel.currentSortOption == SortOption.name ? (viewModel.sortAscending ? "↑" : "↓") : ""}'),
+                title: Text('Trier par Nom ${viewModel.currentSortOption == SortOption.name ? (viewModel.sortAscending ? "↑" : "↓") : ""}'),
                 onTap: () {
                   viewModel.toggleSortOption(SortOption.name);
                   Navigator.pop(context);
@@ -56,12 +65,42 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        title: _showSearchBar
+            ? TextField(
+          controller: _searchController,
+          decoration: InputDecoration(
+            hintText: 'Rechercher un Pokémon...',
+            hintStyle: TextStyle(color: Colors.white70),
+            border: InputBorder.none,
+          ),
+          style: TextStyle(color: Colors.white),
+          onChanged: (value) {
+            Provider.of<PokemonViewModel>(context, listen: false)
+                .updateSearchQuery(value);
+          },
+          autofocus: true,
+        )
+            : const Text(
           'Pokédex',
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
         ),
-        centerTitle: true,
+        centerTitle: _showSearchBar ? false : true,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(_showSearchBar ? Icons.close : Icons.search),
+            onPressed: () {
+              setState(() {
+                if (_showSearchBar) {
+                  _searchController.clear();
+                  Provider.of<PokemonViewModel>(context, listen: false)
+                      .updateSearchQuery('');
+                }
+                _showSearchBar = !_showSearchBar;
+              });
+            },
+          ),
+        ],
       ),
       body: Consumer<PokemonViewModel>(
         builder: (context, viewModel, child) {
@@ -90,6 +129,30 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
             );
           }
 
+          if (viewModel.pokemons.isEmpty && viewModel.searchQuery.isNotEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.search_off,
+                    size: 64,
+                    color: Colors.grey,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Aucun Pokémon trouvé pour "${viewModel.searchQuery}"',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+
           return ListView.builder(
             padding: const EdgeInsets.all(12),
             itemCount: viewModel.pokemons.length,
@@ -107,7 +170,7 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
           final viewModel = Provider.of<PokemonViewModel>(context, listen: false);
           _showSortOptions(viewModel);
         },
-        child: const Icon(Icons.swap_vert),
+        child: const Icon(Icons.sort),
       ),
     );
   }
@@ -140,7 +203,7 @@ class PokemonListItem extends StatelessWidget {
           padding: const EdgeInsets.all(16.0),
           child: Row(
             children: [
-              // ID du Pokémon
+              // Pokemon id
               Container(
                 width: 56,
                 height: 35,
@@ -161,7 +224,7 @@ class PokemonListItem extends StatelessWidget {
               ),
               const SizedBox(width: 11),
 
-              // Image du Pokémon
+              // Pokemon img
               Hero(
                 tag: 'pokemon-${pokemon.id}',
                 child: SizedBox(
@@ -179,7 +242,7 @@ class PokemonListItem extends StatelessWidget {
               ),
               const SizedBox(width: 11),
 
-              // Informations du Pokémon
+              // Pokemon info
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

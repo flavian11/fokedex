@@ -7,17 +7,16 @@ import 'package:path_provider/path_provider.dart';
 class PokemonService {
   final String baseUrl = 'https://pokeapi.co/api/v2';
 
-  // Cache en mémoire
+  // momery cache
   final Map<int, Pokemon> _pokemonCache = {};
   final Map<String, List<Pokemon>> _pokemonListCache = {};
 
-  // Durée de validité du cache (en minutes)
+  // cache time validity (in minutes)
   final int _cacheDuration = 60;
 
-  // Timestamps des dernières requêtes
+  // last requests timestamps
   final Map<String, DateTime> _cacheTimestamps = {};
 
-  // Vérifie si le cache est encore valide
   bool _isCacheValid(String cacheKey) {
     if (!_cacheTimestamps.containsKey(cacheKey)) return false;
 
@@ -27,16 +26,14 @@ class PokemonService {
     return now.difference(timestamp).inMinutes < _cacheDuration;
   }
 
-  // Sauvegarde les données en cache persistant
   Future<void> _saveCacheToFile() async {
     try {
       final directory = await getApplicationDocumentsDirectory();
       final file = File('${directory.path}/pokemon_cache.json');
 
-      // Convertir les données du cache en format JSON
       final Map<String, dynamic> cacheData = {
         'pokemonCache': _pokemonCache.map((key, value) =>
-            MapEntry(key.toString(), value)), // Nécessite toJson dans Pokemon
+            MapEntry(key.toString(), value)),
         'timestamps': _cacheTimestamps.map((key, value) =>
             MapEntry(key, value.millisecondsSinceEpoch)),
       };
@@ -47,7 +44,6 @@ class PokemonService {
     }
   }
 
-  // Charge les données depuis le cache persistant
   Future<void> _loadCacheFromFile() async {
     try {
       final directory = await getApplicationDocumentsDirectory();
@@ -57,7 +53,6 @@ class PokemonService {
         final String contents = await file.readAsString();
         final Map<String, dynamic> cacheData = jsonDecode(contents);
 
-        // Restaurer le cache des pokémons
         if (cacheData.containsKey('pokemonCache')) {
           final Map<String, dynamic> pokemonMap = cacheData['pokemonCache'];
           pokemonMap.forEach((key, value) {
@@ -65,7 +60,6 @@ class PokemonService {
           });
         }
 
-        // Restaurer les timestamps
         if (cacheData.containsKey('timestamps')) {
           final Map<String, dynamic> timestampMap = cacheData['timestamps'];
           timestampMap.forEach((key, value) {
@@ -78,7 +72,7 @@ class PokemonService {
     }
   }
 
-  // Constructeur qui charge le cache au démarrage
+  // Load cache at start up
   PokemonService() {
     _loadCacheFromFile();
   }
@@ -86,7 +80,6 @@ class PokemonService {
   Future<List<Pokemon>> fetchPokemons({int limit = 100000, int offset = 0}) async {
     final String cacheKey = 'pokemon_list_${limit}_${offset}';
 
-    // Vérifier si les données sont en cache et valides
     if (_pokemonListCache.containsKey(cacheKey) && _isCacheValid(cacheKey)) {
       return _pokemonListCache[cacheKey]!;
     }
@@ -104,7 +97,6 @@ class PokemonService {
           final Uri pokemonUrl = Uri.parse(pokemon['url']);
           final pokemonId = int.parse(pokemonUrl.pathSegments[3]);
 
-          // Vérifier si ce Pokémon est déjà en cache
           if (_pokemonCache.containsKey(pokemonId) && _isCacheValid('pokemon_$pokemonId')) {
             pokemonList.add(_pokemonCache[pokemonId]!);
           } else {
@@ -113,7 +105,6 @@ class PokemonService {
               final pokemonData = jsonDecode(detailResponse.body);
               final Pokemon newPokemon = Pokemon.fromJson(pokemonData);
 
-              // Ajouter au cache
               _pokemonCache[pokemonId] = newPokemon;
               _cacheTimestamps['pokemon_$pokemonId'] = DateTime.now();
 
@@ -122,11 +113,9 @@ class PokemonService {
           }
         }
 
-        // Mettre à jour le cache de la liste
         _pokemonListCache[cacheKey] = pokemonList;
         _cacheTimestamps[cacheKey] = DateTime.now();
 
-        // Sauvegarder le cache
         _saveCacheToFile();
 
         return pokemonList;
@@ -134,7 +123,7 @@ class PokemonService {
         throw Exception('Failed to load Pokémon');
       }
     } catch (e) {
-      // En cas d'erreur, retourner le cache même s'il est périmé
+      // In case of error, return cache even if it's outdated
       if (_pokemonListCache.containsKey(cacheKey)) {
         return _pokemonListCache[cacheKey]!;
       }
@@ -145,7 +134,6 @@ class PokemonService {
   Future<Pokemon> fetchPokemonDetails(int id) async {
     final String cacheKey = 'pokemon_$id';
 
-    // Vérifier si les données sont en cache et valides
     if (_pokemonCache.containsKey(id) && _isCacheValid(cacheKey)) {
       return _pokemonCache[id]!;
     }
@@ -157,11 +145,9 @@ class PokemonService {
         final pokemonData = jsonDecode(response.body);
         final Pokemon pokemon = Pokemon.fromJson(pokemonData);
 
-        // Mettre à jour le cache
         _pokemonCache[id] = pokemon;
         _cacheTimestamps[cacheKey] = DateTime.now();
 
-        // Sauvegarder le cache
         _saveCacheToFile();
 
         return pokemon;
@@ -169,7 +155,7 @@ class PokemonService {
         throw Exception('Failed to load Pokémon details');
       }
     } catch (e) {
-      // En cas d'erreur, retourner le cache même s'il est périmé
+      // In case of error, return cache even if it's outdated
       if (_pokemonCache.containsKey(id)) {
         return _pokemonCache[id]!;
       }
@@ -177,7 +163,6 @@ class PokemonService {
     }
   }
 
-  // Méthode pour effacer le cache
   Future<void> clearCache() async {
     _pokemonCache.clear();
     _pokemonListCache.clear();
